@@ -1,5 +1,34 @@
 const User = require("../models/User");
 
+exports.activateList = async (req, res, next) => {
+  const list = req.body.list;
+  const userId = req.body.userId;
+
+  try {
+    const user = await User.findById(userId);
+    if (user) {
+      if (!user.activeLists.find((el) => el._id.toString() === list._id)) {
+        user.activeLists.push(list);
+        user.save();
+      }
+      res.status(200).json({
+        message: "The list was added to active lists successfully!",
+        user: user,
+      });
+    } else {
+      const error = new Error();
+      error.message = "The user trying to start a list does not exist.";
+      error.statusCode = 404;
+      error.title = "No user found...";
+      throw error;
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deactivateList = async (req, res, next) => {};
+
 exports.login = async (req, res, next) => {
   try {
     const user = await User.findOne({ username: req.params.username });
@@ -10,10 +39,10 @@ exports.login = async (req, res, next) => {
       });
     } else {
       const error = new Error();
-      error.message = "No user with that name was found."
-      error.statusCode = 404
-      error.title = 'This is awkward...'
-      next(error)
+      error.message = "No user with that name was found.";
+      error.statusCode = 404;
+      error.title = "This is awkward...";
+      next(error);
     }
   } catch (error) {
     next(error);
