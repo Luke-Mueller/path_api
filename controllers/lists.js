@@ -1,8 +1,5 @@
 const List = require("../models/List");
-
-exports.activateList = async (req, res, next) => {
-
-}
+const User = require("../models/User");
 
 exports.archiveList = async (req, res, next) => {
   const listId = req.body.list._id;
@@ -23,6 +20,12 @@ exports.archiveList = async (req, res, next) => {
       error.title = "No list found...";
       throw error;
     } else {
+      const user = await User.findById(userId);
+      const newActiveLists = user.activeLists.filter(
+        (list) => list._id.toString() !== listId.toString()
+      );
+      user.activeLists = newActiveLists;
+      user.save();
       res.status(200).json({
         message: `${list.name} has been archived successfully!`,
         ok: true,
@@ -33,15 +36,12 @@ exports.archiveList = async (req, res, next) => {
   }
 };
 
-exports.deactivateList = async (req, res, next) => {
-  
-}
-
 exports.deleteList = async (req, res, next) => {
   const listId = req.params.listId;
   const userId = req.params.userId;
   try {
     const list = await List.findById(listId);
+    const user = await User.findById(userId);
     if (!list) {
       const error = new Error();
       error.message = "The list you are looking for does not exist.";
@@ -55,12 +55,23 @@ exports.deleteList = async (req, res, next) => {
       list.arcOwnerIds = arcOwnerIds;
       list.ownerIds = ownerIds;
       list.save();
+
+      const newActiveLists = user.activeLists.filter(
+        (list) => list._id.toString() !== listId
+      );
+      user.activeLists = newActiveLists;
+      user.save();
       res
         .status(200)
         .json({ message: `${list.name} was deleted successfully!`, ok: true });
     } else {
       const result = await List.deleteOne({ _id: listId });
       if (result.ok) {
+        const newActiveLists = user.activeLists.filter(
+          (l) => l._id.toString() !== list._id.toString()
+        );
+        user.activeLists = newActiveLists;
+        user.save();
         res.status(200).json({
           message: `${list.name} was deleted successfully!`,
           ok: true,
@@ -77,7 +88,14 @@ exports.getLists = async (req, res, next) => {
   const arr = req.params.arr;
   try {
     const lists = await List.find().where(arr).in([userId]);
+
     if (lists) {
+      for (let list of lists) {
+        if (list.ownerIds.includes(userId)) list.ownerIds = [userId];
+        else list.ownerIds = [];
+        if (list.arcOwnerIds.includes(userId)) list.arcOwnerIds = [userId];
+        else list.arcOwnerIds = [];
+      }
       res.status(200).json({
         lists: lists,
         message: "Lists retrieved successfully!",
@@ -111,10 +129,11 @@ exports.postList = async (req, res, next) => {
       ok: true,
     });
   } catch (error) {
-    console.log("POSTLIST ERROR: ", error.message)
-    error.message = "Our server was not able to create the list.  Please try again later."
+    console.log("POSTLIST ERROR: ", error.message);
+    error.message =
+      "Our server was not able to create the list.  Please try again later.";
     error.statusCode = 404;
-    error.title = "List not created..."
+    error.title = "List not created...";
     next(error);
   }
 };
