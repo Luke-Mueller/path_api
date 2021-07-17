@@ -115,7 +115,6 @@ exports.getLists = async (req, res, next) => {
 
 exports.postList = async (req, res, next) => {
   const list = new List({
-    arcOwnerIds: [],
     items: req.body.list.items,
     name: req.body.list.name,
     ownerIds: [req.body.userId],
