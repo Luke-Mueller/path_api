@@ -9,13 +9,18 @@ const userSchema = new Schema({
       _id: { type: Schema.Types.ObjectId, ref: "List" },
       items: [
         {
-          itemId: { type: Schema.Types.ObjectId },
-          done: { type: Schema.Types.Boolean },
+          itemType: String,
+          item: String,
+          subItems: [{ item: String }],
+          subName: String,
+          done: Boolean,
         },
       ],
       progress: { type: Schema.Types.Number },
     },
   ],
+  archivedLists: [{ type: Schema.Types.ObjectId, ref: "List" }],
+  myLists: [{ type: Schema.Types.ObjectId, ref: "List" }],
 });
 
 module.exports = mongoose.model("User", userSchema);
