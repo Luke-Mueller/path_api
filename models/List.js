@@ -5,8 +5,8 @@ const listSchema = new Schema({
   items: [{ 
     itemType: String, 
     item: String, 
-    subItems: [{ item: String }], 
     subName: String, 
+    subItems: [{ item: String }], 
   }],
   name: { type: String, required: true },
   ownerIds: [{ type: Schema.Types.ObjectId, ref: "User" }],
