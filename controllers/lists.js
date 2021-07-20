@@ -115,18 +115,23 @@ exports.getLists = async (req, res, next) => {
 
 exports.postList = async (req, res, next) => {
   const list = new List({
-    items: req.body.list.items,
-    name: req.body.list.name,
-    ownerIds: [req.body.userId],
+    items: req.body.items,
+    name: req.body.name,
+    ownerIds: req.body.ownerIds,
   });
 
   try {
     const savedList = await list.save();
-    res.status(201).json({
-      list: savedList,
-      message: `${savedList.name} was created successfully!`,
-      ok: true,
-    });
+    const user = await User.findById(req.body.ownerIds[0]);
+    if (savedList) {
+      user.myLists.push(savedList._id);
+      user.save();
+      res.status(201).json({
+        list: savedList,
+        message: `${savedList.name} was created successfully!`,
+        ok: true,
+      });
+    }
   } catch (error) {
     console.log("POSTLIST ERROR: ", error.message);
     error.message =
