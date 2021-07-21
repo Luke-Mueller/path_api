@@ -20,8 +20,8 @@ const userSchema = new Schema({
     },
   ],
   archivedLists: [{ type: Schema.Types.ObjectId, ref: "List" }],
+  inviteLists: [{ type: Schema.Types.ObjectId, ref: "List" }],
   myLists: [{ type: Schema.Types.ObjectId, ref: "List" }],
-  waitingLists: [{ type: Schema.Types.ObjectId, ref: "List" }],
 });
 
 module.exports = mongoose.model("User", userSchema);
