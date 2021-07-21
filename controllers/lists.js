@@ -86,6 +86,14 @@ exports.deleteList = async (req, res, next) => {
 exports.getLists = async (req, res, next) => {
   const arr = req.params.arr.split(",");
 
+  if (arr[0] === "none") {
+    return res.status(200).json({
+      lists: [],
+      message: "Lists retrieved successfully!",
+      ok: true,
+    });
+  }
+  
   try {
     const lists = await List.find().where("_id").in(arr);
     if (lists) {
