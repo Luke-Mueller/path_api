@@ -84,30 +84,23 @@ exports.deleteList = async (req, res, next) => {
 };
 
 exports.getLists = async (req, res, next) => {
-  const arr = req.params.arr.split(',');
+  const arr = req.params.arr.split(",");
 
   try {
     const lists = await List.find().where("_id").in(arr);
-    console.log('lists: ', lists)
-    // if (lists) {
-    //   for (let list of lists) {
-    //     if (list.ownerIds.includes(userId)) list.ownerIds = [userId];
-    //     else list.ownerIds = [];
-    //     if (list.arcOwnerIds.includes(userId)) list.arcOwnerIds = [userId];
-    //     else list.arcOwnerIds = [];
-    //   }
-    //   res.status(200).json({
-    //     lists: lists,
-    //     message: "Lists retrieved successfully!",
-    //     ok: true,
-    //   });
-    // } else {
-    //   const error = new Error();
-    //   error.message = "This user has no lists.";
-    //   error.statusCode = 404;
-    //   error.title = "No lists found...";
-    //   throw error;
-    // }
+    if (lists) {
+      res.status(200).json({
+        lists: lists,
+        message: "Lists retrieved successfully!",
+        ok: true,
+      });
+    } else {
+      const error = new Error();
+      error.message = "This user has no lists.";
+      error.statusCode = 404;
+      error.title = "No lists found...";
+      throw error;
+    }
   } catch (error) {
     next(error);
   }
