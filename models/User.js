@@ -11,7 +11,7 @@ const userSchema = new Schema({
         {
           itemType: String,
           item: String,
-          subItems: [{ item: String }],
+          subItems: Array,
           subName: String,
           done: Boolean,
         },
