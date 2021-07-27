@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 
+const activeListsRoutes = require("./routes/activeLists");
 const listsRoutes = require("./routes/lists");
 const userRoutes = require("./routes/user");
 
@@ -24,6 +25,7 @@ app.use((_, res, next) => {
 
 app.use(express.json());
 
+app.use("/activeLists", activeListsRoutes);
 app.use("/lists", listsRoutes);
 app.use("/user", userRoutes);
 
