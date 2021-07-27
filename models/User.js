@@ -4,21 +4,7 @@ const Schema = mongoose.Schema;
 const userSchema = new Schema({
   username: { type: String, required: true },
   password: { type: String, required: true },
-  activeLists: [
-    {
-      _id: { type: Schema.Types.ObjectId, ref: "List" },
-      items: [
-        {
-          itemType: String,
-          item: String,
-          subItems: Array,
-          subName: String,
-          done: Boolean,
-        },
-      ],
-      progress: { type: Schema.Types.Number },
-    },
-  ],
+  activeLists: [{type: Schema.Types.ObjectId, ref: "ActiveList"}],
   archivedLists: [{ type: Schema.Types.ObjectId, ref: "List" }],
   inviteLists: [{ type: Schema.Types.ObjectId, ref: "List" }],
   myLists: [{ type: Schema.Types.ObjectId, ref: "List" }],
