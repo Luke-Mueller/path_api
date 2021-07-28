@@ -2,35 +2,24 @@ const List = require("../models/List");
 const User = require("../models/User");
 
 exports.archiveList = async (req, res, next) => {
-  const listId = req.body.list._id;
+  const listId = req.body.listId;
   const userId = req.body.userId;
-  const arcOwnerIds = req.body.list.arcOwnerIds;
-  const ownerIds = req.body.list.ownerIds.filter((id) => id !== userId);
 
   try {
-    arcOwnerIds.push(userId);
-    const list = await List.findOneAndUpdate(
-      { _id: listId },
-      { arcOwnerIds: arcOwnerIds, ownerIds: ownerIds }
+    const user = await User.findById(userId);
+    user.archivedLists.push(listId);
+    const newMyLists = user.myLists.filter(
+      (list) => list._id.toString() !== listId.toString()
     );
-    if (!list) {
-      const error = new Error();
-      error.message = "The list you are trying to archive does not exist.";
-      error.statusCode = 404;
-      error.title = "No list found...";
-      throw error;
-    } else {
-      const user = await User.findById(userId);
-      const newActiveLists = user.activeLists.filter(
-        (list) => list._id.toString() !== listId.toString()
-      );
-      user.activeLists = newActiveLists;
-      user.save();
-      res.status(200).json({
-        message: `${list.name} has been archived successfully!`,
-        ok: true,
-      });
-    }
+    user.myLists = newMyLists;
+    const savedUser = await user.save();
+    const list = await List.findById(listId);
+
+    res.status(201).json({
+      message: "List successfully archived!",
+      list,
+      user: savedUser,
+    });
   } catch (error) {
     next(error);
   }
@@ -93,7 +82,7 @@ exports.getLists = async (req, res, next) => {
       ok: true,
     });
   }
-  
+
   try {
     const lists = await List.find().where("_id").in(arr);
     if (lists) {
