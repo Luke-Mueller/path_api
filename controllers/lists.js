@@ -5,6 +5,7 @@ exports.archiveList = async (req, res, next) => {
   const listId = req.body.listId;
   const userId = req.body.userId;
 
+  console.log( listId, userId )
   try {
     const user = await User.findById(userId);
     user.archivedLists.push(listId);
