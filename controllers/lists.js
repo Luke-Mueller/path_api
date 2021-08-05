@@ -5,7 +5,6 @@ exports.archiveList = async (req, res, next) => {
   const listId = req.body.listId;
   const userId = req.body.userId;
 
-  console.log( listId, userId )
   try {
     const user = await User.findById(userId);
     user.archivedLists.push(listId);
@@ -136,7 +135,7 @@ exports.postList = async (req, res, next) => {
 exports.putList = async (req, res, next) => {
   const reqList = req.body;
   try {
-    const list = await List.findOneAndReplace({ _id: reqList._id }, reqList);
+    const list = await List.findOneAndReplace({ _id: reqList._id }, reqList, { new: true });
     if (!list) {
       const error = new Error();
       error.message = "The list you are trying to edit does not exist.";
@@ -145,7 +144,7 @@ exports.putList = async (req, res, next) => {
       throw error;
     }
     res.status(200).json({
-      list: list,
+      returnedList: list,
       message: `${list.name} was updated successfully!`,
       ok: true,
     });
