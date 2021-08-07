@@ -26,11 +26,14 @@ exports.archiveList = async (req, res, next) => {
 };
 
 exports.deleteList = async (req, res, next) => {
+  //    1.  Define vars / find list and user
   const listId = req.params.listId;
   const userId = req.params.userId;
   try {
     const list = await List.findById(listId);
     const user = await User.findById(userId);
+    let result;
+
     if (!list) {
       const error = new Error();
       error.message = "The list you are looking for does not exist.";
@@ -38,34 +41,28 @@ exports.deleteList = async (req, res, next) => {
       error.title = "No list found...";
       throw error;
     }
-    if (list.ownerIds.length > 1 || list.arcOwnerIds.length > 1) {
-      const arcOwnerIds = list.arcOwnerIds.filter((id) => id !== userId);
+    //    2.  Remove userId from list if list.ownerIds.length > 1
+    if (list.ownerIds.length > 1) {
       const ownerIds = list.ownerIds.filter((id) => id !== userId);
-      list.arcOwnerIds = arcOwnerIds;
       list.ownerIds = ownerIds;
-      list.save();
-
-      const newActiveLists = user.activeLists.filter(
-        (list) => list._id.toString() !== listId
-      );
-      user.activeLists = newActiveLists;
-      user.save();
-      res
-        .status(200)
-        .json({ message: `${list.name} was deleted successfully!`, ok: true });
+      result = await list.save();
     } else {
-      const result = await List.deleteOne({ _id: listId });
-      if (result.ok) {
-        const newActiveLists = user.activeLists.filter(
-          (l) => l._id.toString() !== list._id.toString()
-        );
-        user.activeLists = newActiveLists;
-        user.save();
-        res.status(200).json({
-          message: `${list.name} was deleted successfully!`,
-          ok: true,
-        });
-      }
+      //    3.  Delete list if list.ownerIds.length !> 1
+      result = await List.findByIdAndDelete(listId);
+    }
+    //    4.  Remove list from user.myLists
+    if (result) {
+      const newMyLists = user.myLists.filter(
+        (l) => l._id.toString() !== list._id.toString()
+      );
+      user.myLists = newMyLists;
+      const newUser = await user.save();
+      //    5.  Return user
+      res.status(200).json({
+        message: `${list.name} was deleted successfully!`,
+        user: newUser,
+        ok: true,
+      });
     }
   } catch (error) {
     next(error);
@@ -113,7 +110,7 @@ exports.postList = async (req, res, next) => {
   try {
     const savedList = await list.save();
     const user = await User.findById(req.body.ownerIds[0]);
-    if (savedList) {
+    if (savedList && user) {
       user.myLists.push(savedList._id);
       user.save();
       res.status(201).json({
@@ -135,7 +132,9 @@ exports.postList = async (req, res, next) => {
 exports.putList = async (req, res, next) => {
   const reqList = req.body;
   try {
-    const list = await List.findOneAndReplace({ _id: reqList._id }, reqList, { new: true });
+    const list = await List.findOneAndReplace({ _id: reqList._id }, reqList, {
+      new: true,
+    });
     if (!list) {
       const error = new Error();
       error.message = "The list you are trying to edit does not exist.";
