@@ -58,6 +58,7 @@ exports.postList = async (req, res, next) => {
     const newList = new ActiveList({
       items: newItems,
       name: list.name,
+      ownerId: [userId],
       parentId: list._id,
       progress: 0,
     });
