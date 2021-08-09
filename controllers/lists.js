@@ -1,3 +1,4 @@
+const ActiveList = require("../models/ActiveList");
 const List = require("../models/List");
 const User = require("../models/User");
 
@@ -29,11 +30,19 @@ exports.deleteList = async (req, res, next) => {
   //    1.  Define vars / find list and user
   const listId = req.params.listId;
   const userId = req.params.userId;
-  try {
-    const list = await List.findById(listId);
-    const user = await User.findById(userId);
-    let result;
+  // "activeLists" : "archivedLists" : "myLists"
+  const arr = req.params.arr;
 
+  try {
+    let list;
+    if (arr === "activeLists") {
+      list = await ActiveList.findById(listId);
+    } else {
+      list = await List.findById(listId);
+    }
+    const user = await User.findById(userId);
+
+    let result;
     if (!list) {
       const error = new Error();
       error.message = "The list you are looking for does not exist.";
@@ -48,14 +57,21 @@ exports.deleteList = async (req, res, next) => {
       result = await list.save();
     } else {
       //    3.  Delete list if list.ownerIds.length !> 1
-      result = await List.findByIdAndDelete(listId);
+      result =
+        arr === "activeLists"
+          ? await ActiveList.findByIdAndDelete(listId)
+          : await List.findByIdAndDelete(listId);
     }
     //    4.  Remove list from user.myLists
     if (result) {
-      const newMyLists = user.myLists.filter(
-        (l) => l._id.toString() !== list._id.toString()
+      let lists;
+      if (arr === "activeLists") lists = user.activeLists
+      else if (arr === "archivedLists") lists = user.archivedLists
+      else if (arr === "myLists") lists = user.myLists
+      const newLists = lists.filter(
+        (l) => l._id.toString() !== listId.toString()
       );
-      user.myLists = newMyLists;
+      user[arr] = newLists;
       const newUser = await user.save();
       //    5.  Return user
       res.status(200).json({
