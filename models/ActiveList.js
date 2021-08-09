@@ -12,6 +12,7 @@ const activeListSchema = new Schema({
     },
   ],
   name: { type: Schema.Types.String },
+  ownerIds: [{ type: Schema.Types.ObjectId, ref: "User" }],
   parentId: { type: Schema.Types.ObjectId, ref: "List" },
   progress: { type: Schema.Types.Number },
 });
