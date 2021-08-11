@@ -33,8 +33,7 @@ exports.getLists = async (req, res, next) => {
 };
 
 exports.postList = async (req, res, next) => {
-  const list = req.body.list;
-  const userId = req.body.userId;
+  const { list, userId } = req.body;
 
   try {
     // add 'done' property to each list item and subList item
@@ -58,7 +57,7 @@ exports.postList = async (req, res, next) => {
     const newList = new ActiveList({
       items: newItems,
       name: list.name,
-      ownerId: [userId],
+      ownerIds: [userId],
       parentId: list._id,
       progress: 0,
     });
