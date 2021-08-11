@@ -65,9 +65,9 @@ exports.deleteList = async (req, res, next) => {
     //    4.  Remove list from user.myLists
     if (result) {
       let lists;
-      if (arr === "activeLists") lists = user.activeLists
-      else if (arr === "archivedLists") lists = user.archivedLists
-      else if (arr === "myLists") lists = user.myLists
+      if (arr === "activeLists") lists = user.activeLists;
+      else if (arr === "archivedLists") lists = user.archivedLists;
+      else if (arr === "myLists") lists = user.myLists;
       const newLists = lists.filter(
         (l) => l._id.toString() !== listId.toString()
       );
@@ -146,12 +146,21 @@ exports.postList = async (req, res, next) => {
 };
 
 exports.putList = async (req, res, next) => {
-  const reqList = req.body;
+  const { list, listType } = req.body;
   try {
-    const list = await List.findOneAndReplace({ _id: reqList._id }, reqList, {
-      new: true,
-    });
-    if (!list) {
+    let result;
+
+    if (listType === "lists") {
+      result = await List.findOneAndReplace({ _id: list._id }, list, {
+        new: true,
+      });
+    } else if (listType === "activeLists") {
+      result = await ActiveList.findOneAndReplace({ _id: list._id }, list, {
+        new: true,
+      });
+    }
+
+    if (!result) {
       const error = new Error();
       error.message = "The list you are trying to edit does not exist.";
       error.statusCode = 404;
@@ -159,8 +168,8 @@ exports.putList = async (req, res, next) => {
       throw error;
     }
     res.status(200).json({
-      returnedList: list,
-      message: `${list.name} was updated successfully!`,
+      returnedList: result,
+      message: `${result.name} was updated successfully!`,
       ok: true,
     });
   } catch (error) {
