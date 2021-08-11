@@ -1,4 +1,46 @@
+const ActiveList = require("../models/ActiveList");
+const List = require("../models/List");
 const User = require("../models/User");
+
+exports.delete = async (req, res, next) => {
+  const activeArr = req.params.activeArr.split(",");
+  const archivedArr = req.params.archivedArr.split(",");
+  const listArr = req.params.listArr.split(",");
+  const userId = req.params.userId;
+  try {
+    const activeLists = await ActiveList.find().where("_id").in(activeArr);
+    for (const list of activeLists) {
+      if (list.ownerIds.length > 1) {
+        const newOwnerIds = list.ownerIds.filter((id) => id !== userId);
+        list.ownerIds = newOwnerIds;
+        list.save();
+      } else {
+        await ActiveList.findByIdAndDelete(list._id);
+      }
+    }
+    const myLists = await List.find().where("_id").in(listArr);
+    const archivedLists = await List.find().where("_id").in(archivedArr);
+    const lists = [...myLists, ...archivedLists];
+    for (const list of lists) {
+      if (list.ownerIds.length > 1) {
+        const newOwnerIds = list.filter((id) => id !== userId);
+        list.ownerIds = newOwnerIds;
+        list.save();
+      } else {
+        await List.findByIdAndDelete(list._id);
+      }
+    }
+    console.log(5);
+
+    const user = await User.findByIdAndDelete(userId);
+    console.log("user: ", user);
+    res.status(200).json({
+      message: "User deleted successfully!",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 exports.login = async (req, res, next) => {
   try {
@@ -26,18 +68,18 @@ exports.restoreList = async (req, res, next) => {
 
   try {
     const user = await User.findById(userId);
-  
+
     // remove listId from user.archivedLists
     const newArchivedLists = user.archivedLists.filter(
       (list) => list._id.toString() !== listId.toString()
     );
     user.archivedLists = newArchivedLists;
-  
+
     // push listId to user.myLists
     const newMyLists = [...user.myLists];
     newMyLists.push(listId);
     user.myLists = newMyLists;
-  
+
     // save user
     const returnedUser = await user.save();
     // return user in res
@@ -46,7 +88,7 @@ exports.restoreList = async (req, res, next) => {
       user: returnedUser,
     });
   } catch (error) {
-    next(error)
+    next(error);
   }
 };
 
