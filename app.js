@@ -9,7 +9,7 @@ require("dotenv").config();
 const DB_NAME = process.env.DB_NAME;
 const DB_PASS = process.env.DB_PASS;
 const DB_USER = process.env.DB_USER;
-const PORT = 8080;
+const PORT = process.env.PORT;
 
 const app = express();
 
@@ -48,6 +48,6 @@ mongoose
   )
   .then(() => {
     console.log(`Your server is running on port ${PORT}`);
-    app.listen(PORT);
+    app.listen(PORT || 8080);
   })
   .catch((err) => console.log(err));
