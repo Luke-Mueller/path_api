@@ -1,20 +1,20 @@
-const ActiveList = require("../models/ActiveList");
-const List = require("../models/List");
-const User = require("../models/User");
+import { findById, findByIdAndDelete, findOneAndReplace } from "../models/ActiveList";
+import List, { findById as _findById, findByIdAndDelete as _findByIdAndDelete, find, findOneAndReplace as _findOneAndReplace } from "../models/List";
+import { findById as __findById } from "../models/User";
 
-exports.archiveList = async (req, res, next) => {
+export async function archiveList(req, res, next) {
   const listId = req.body.listId;
   const userId = req.body.userId;
 
   try {
-    const user = await User.findById(userId);
+    const user = await __findById(userId);
     user.archivedLists.push(listId);
     const newMyLists = user.myLists.filter(
       (list) => list._id.toString() !== listId.toString()
     );
     user.myLists = newMyLists;
     const savedUser = await user.save();
-    const list = await List.findById(listId);
+    const list = await _findById(listId);
 
     res.status(201).json({
       message: "List successfully archived!",
@@ -24,9 +24,9 @@ exports.archiveList = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-};
+}
 
-exports.deleteList = async (req, res, next) => {
+export async function deleteList(req, res, next) {
   //    1.  Define vars / find list and user
   const listId = req.params.listId;
   const userId = req.params.userId;
@@ -36,11 +36,11 @@ exports.deleteList = async (req, res, next) => {
   try {
     let list;
     if (arr === "activeLists") {
-      list = await ActiveList.findById(listId);
+      list = await findById(listId);
     } else {
-      list = await List.findById(listId);
+      list = await _findById(listId);
     }
-    const user = await User.findById(userId);
+    const user = await __findById(userId);
 
     let result;
     if (!list) {
@@ -59,8 +59,8 @@ exports.deleteList = async (req, res, next) => {
       //    3.  Delete list if list.ownerIds.length !> 1
       result =
         arr === "activeLists"
-          ? await ActiveList.findByIdAndDelete(listId)
-          : await List.findByIdAndDelete(listId);
+          ? await findByIdAndDelete(listId)
+          : await _findByIdAndDelete(listId);
     }
     //    4.  Remove list from user.myLists
     if (result) {
@@ -83,9 +83,9 @@ exports.deleteList = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-};
+}
 
-exports.getLists = async (req, res, next) => {
+export async function getLists(req, res, next) {
   const arr = req.params.arr.split(",");
 
   if (arr[0] === "none") {
@@ -97,7 +97,7 @@ exports.getLists = async (req, res, next) => {
   }
 
   try {
-    const lists = await List.find().where("_id").in(arr);
+    const lists = await find().where("_id").in(arr);
     if (lists) {
       res.status(200).json({
         lists: lists,
@@ -114,9 +114,9 @@ exports.getLists = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-};
+}
 
-exports.postList = async (req, res, next) => {
+export async function postList(req, res, next) {
   const list = new List({
     items: req.body.items,
     name: req.body.name,
@@ -125,7 +125,7 @@ exports.postList = async (req, res, next) => {
 
   try {
     const savedList = await list.save();
-    const user = await User.findById(req.body.ownerIds[0]);
+    const user = await __findById(req.body.ownerIds[0]);
     if (savedList && user) {
       user.myLists.push(savedList._id);
       user.save();
@@ -143,19 +143,19 @@ exports.postList = async (req, res, next) => {
     error.title = "List not created...";
     next(error);
   }
-};
+}
 
-exports.putList = async (req, res, next) => {
+export async function putList(req, res, next) {
   const { list, listType } = req.body;
   try {
     let result;
 
     if (listType === "lists") {
-      result = await List.findOneAndReplace({ _id: list._id }, list, {
+      result = await _findOneAndReplace({ _id: list._id }, list, {
         new: true,
       });
     } else if (listType === "activeLists") {
-      result = await ActiveList.findOneAndReplace({ _id: list._id }, list, {
+      result = await findOneAndReplace({ _id: list._id }, list, {
         new: true,
       });
     }
@@ -175,4 +175,4 @@ exports.putList = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-};
+}
