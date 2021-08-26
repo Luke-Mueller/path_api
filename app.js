@@ -6,9 +6,9 @@ const listsRoutes = require("./routes/lists");
 const userRoutes = require("./routes/user");
 
 require("dotenv").config();
-const DB_NAME = process.env.DB_NAME;
-const DB_PASS = process.env.DB_PASS;
-const DB_USER = process.env.DB_USER;
+const DB_NAME = "todoDatabase";
+const DB_PASS = "1aEG1oROKRGs7ZBr";
+const DB_USER = "luke";
 const PORT = process.env.PORT || 8080;
 
 const app = express();
