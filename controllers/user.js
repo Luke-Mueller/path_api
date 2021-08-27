@@ -7,45 +7,48 @@ const User = require("../models/User");
 // exports.declineList = async (req, res, next) => {};
 
 exports.deleteUser = async (req, res, next) => {
-  console.log('hello');
-  // const activeArr = req.params.activeArr.split(",");
-  // const archivedArr = req.params.archivedArr.split(",");
-  // const listArr = req.params.listArr.split(",");
-  // const userId = req.params.userId;
+  const activeArr = req.params.activeArr.split(",");
+  const archivedArr = req.params.archivedArr.split(",");
+  const listArr = req.params.listArr.split(",");
+  const userId = req.params.userId;
 
-  // try {
-  //   const activeLists = await ActiveList.find().where("_id").in(activeArr);
-  //   for (const list of activeLists) {
-  //     if (list.ownerIds.length > 1) {
-  //       const newOwnerIds = list.ownerIds.filter((id) => id !== userId);
-  //       list.ownerIds = newOwnerIds;
-  //       list.save();
-  //     } else {
-  //       await ActiveList.findByIdAndDelete(list._id);
-  //     }
-  //   }
-  //   const myLists = await List.find().where("_id").in(listArr);
-  //   const archivedLists = await List.find().where("_id").in(archivedArr);
-  //   const lists = [...myLists, ...archivedLists];
-  //   for (const list of lists) {
-  //     if (list.ownerIds.length > 1) {
-  //       const newOwnerIds = list.filter((id) => id !== userId);
-  //       list.ownerIds = newOwnerIds;
-  //       list.save();
-  //     } else {
-  //       await List.findByIdAndDelete(list._id);
-  //     }
-  //   }
-
-  //   const user = await User.findByIdAndDelete(userId);
-  //   console.log("user: ", user);
-  //   res.status(200).json({
-  //     message: "User deleted successfully!",
-  //     done: true,
-  //   });
-  // } catch (error) {
-  //   next(error);
-  // }
+  try {
+    if (activeArr[0] !== "none") {
+      const activeLists = await ActiveList.find().where("_id").in(activeArr);
+      for (const list of activeLists) {
+        if (list.ownerIds.length > 1) {
+          const newOwnerIds = list.ownerIds.filter((id) => id !== userId);
+          list.ownerIds = newOwnerIds;
+          list.save();
+        } else {
+          await ActiveList.findByIdAndDelete(list._id);
+        }
+      }
+    }
+    let myLists = [];
+    let archivedLists = [];
+    if (listArr[0] !== "none")
+      myLists = await List.find().where("_id").in(listArr);
+    if (archivedArr[0] !== "none")
+      archivedLists = await List.find().where("_id").in(archivedArr);
+    const lists = [...myLists, ...archivedLists];
+    for (const list of lists) {
+      if (list.ownerIds.length > 1) {
+        const newOwnerIds = list.filter((id) => id !== userId);
+        list.ownerIds = newOwnerIds;
+        list.save();
+      } else {
+        await List.findByIdAndDelete(list._id);
+      }
+    }
+    const user = await User.findByIdAndDelete(userId);
+    res.status(200).json({
+      message: "User deleted successfully!",
+      done: true,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 exports.login = async (req, res, next) => {
