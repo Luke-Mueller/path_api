@@ -3,23 +3,6 @@ const List = require("../models/List");
 const User = require("../models/User");
 
 exports.acceptList = async (req, res, next) => {
-  console.log("accepting list...");
-
-  // find user and list
-
-  // add listId to user.myLists and remove listId from user.inviteLists
-
-  // save user
-
-  // push userId to list.ownerIds
-
-  // save list
-
-  // send new user
-};
-
-exports.declineList = async (req, res, next) => {
-  console.log('decliningList...')
   const listId = req.body.listId;
   const userId = req.body.userId;
 
@@ -30,7 +13,57 @@ exports.declineList = async (req, res, next) => {
       error.message = "No user with that name was found.";
       error.statusCode = 404;
       error.title = "This is awkward...";
-      next(error)
+      next(error);
+    }
+    const list = await List.findById(listId);
+    if (!list) {
+      const error = new Error();
+      error.message =
+        "No list was found. Likely, it was deleted by the sender before it was accepted.";
+      error.statusCode = 404;
+      error.title = "No list found...";
+      next(error);
+    }
+
+    const newMyLists = user.myLists;
+    newMyLists.push(listId);
+
+    const newInviteLists = user.inviteLists.filter(
+      (list) => list._id.toString() !== listId.toString()
+    );
+
+    user.inviteLists = newInviteLists;
+    const savedUser = await user.save();
+
+    const newOwnerIds = list.ownerIds;
+    newOwnerIds.push(userId);
+
+    list.ownerIds = newOwnerIds;
+
+    await list.save();
+
+    res.status(200).json({
+      message: `You add ${list.name} to your lists.`,
+      user: savedUser,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.declineList = async (req, res, next) => {
+  console.log("decliningList...");
+  const listId = req.body.listId;
+  const userId = req.body.userId;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      const error = new Error();
+      error.message = "No user with that name was found.";
+      error.statusCode = 404;
+      error.title = "This is awkward...";
+      next(error);
     }
     const newInviteLists = user.inviteLists.filter(
       (list) => list._id.toString() !== listId.toString()
@@ -57,9 +90,11 @@ exports.deleteUser = async (req, res, next) => {
       const activeLists = await ActiveList.find().where("_id").in(activeArr);
       for (const list of activeLists) {
         if (list.ownerIds.length > 1) {
-          const newOwnerIds = list.ownerIds.filter((id) => id !== userId);
+          const newOwnerIds = list.ownerIds.filter(
+            (id) => id.toString() !== userId.toString()
+          );
           list.ownerIds = newOwnerIds;
-          list.save();
+          await list.save();
         } else {
           await ActiveList.findByIdAndDelete(list._id);
         }
@@ -74,14 +109,16 @@ exports.deleteUser = async (req, res, next) => {
     const lists = [...myLists, ...archivedLists];
     for (const list of lists) {
       if (list.ownerIds.length > 1) {
-        const newOwnerIds = list.filter((id) => id !== userId);
+        const newOwnerIds = list.ownerIds.filter(
+          (id) => id.toString() !== userId.toString()
+        );
         list.ownerIds = newOwnerIds;
-        list.save();
+        await list.save();
       } else {
         await List.findByIdAndDelete(list._id);
       }
     }
-    const user = await User.findByIdAndDelete(userId);
+    await User.findByIdAndDelete(userId);
     res.status(200).json({
       message: "User deleted successfully!",
       done: true,
