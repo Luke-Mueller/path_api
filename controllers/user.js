@@ -2,9 +2,49 @@ const ActiveList = require("../models/ActiveList");
 const List = require("../models/List");
 const User = require("../models/User");
 
-// exports.acceptList = async (req, res, next) => {};
+exports.acceptList = async (req, res, next) => {
+  console.log("accepting list...");
 
-// exports.declineList = async (req, res, next) => {};
+  // find user and list
+
+  // add listId to user.myLists and remove listId from user.inviteLists
+
+  // save user
+
+  // push userId to list.ownerIds
+
+  // save list
+
+  // send new user
+};
+
+exports.declineList = async (req, res, next) => {
+  console.log('decliningList...')
+  const listId = req.body.listId;
+  const userId = req.body.userId;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      const error = new Error();
+      error.message = "No user with that name was found.";
+      error.statusCode = 404;
+      error.title = "This is awkward...";
+      next(error)
+    }
+    const newInviteLists = user.inviteLists.filter(
+      (list) => list._id.toString() !== listId.toString()
+    );
+    user.inviteLists = newInviteLists;
+    const savedUser = await user.save();
+    res.status(200).json({
+      message: "List declined",
+      user: savedUser,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 exports.deleteUser = async (req, res, next) => {
   const activeArr = req.params.activeArr.split(",");
