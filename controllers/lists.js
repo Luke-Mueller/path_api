@@ -50,9 +50,12 @@ exports.deleteList = async (req, res, next) => {
       error.title = "No list found...";
       throw error;
     }
+
     //    2.  Remove userId from list if list.ownerIds.length > 1
     if (list.ownerIds.length > 1) {
-      const ownerIds = list.ownerIds.filter((id) => id !== userId);
+      const ownerIds = list.ownerIds.filter(
+        (id) => id.toString() !== userId.toString()
+      );
       list.ownerIds = ownerIds;
       result = await list.save();
     } else {
