@@ -122,7 +122,7 @@ exports.getLists = async (req, res, next) => {
 exports.postList = async (req, res, next) => {
   const list = new List({
     items: req.body.items,
-    name: req.body.name,
+    name: req.body.name || "New list",
     ownerIds: req.body.ownerIds,
   });
 
