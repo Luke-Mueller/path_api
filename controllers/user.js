@@ -52,7 +52,6 @@ exports.acceptList = async (req, res, next) => {
 };
 
 exports.declineList = async (req, res, next) => {
-  console.log("decliningList...");
   const listId = req.body.listId;
   const userId = req.body.userId;
 
