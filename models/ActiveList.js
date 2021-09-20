@@ -4,6 +4,7 @@ const Schema = mongoose.Schema;
 const activeListSchema = new Schema({
   items: [
     {
+      details: String,
       itemType: String,
       item: String,
       subItems: Array,
